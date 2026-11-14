@@ -1,8 +1,10 @@
 # dsh-wait-guard — 前台等待守卫
 
+> 仓库：<https://github.com/SUZUNAMI/dsh-wait-guard>（私有）
+
 一个 DSH Host 插件：在 `tools/pre-execute` 上做**前台等待门控**。违规的调用默认被拒绝；
-开启 `promptOnViolation` 时改为**弹出宿主的审批框**由你手动授权——批准后本回合豁免，
-拒绝后本回合不再打扰。它不依赖提示词依从性，对子代理同样生效。
+开启 `promptOnViolation` 时改为**由你手动授权**——批准后本回合豁免，
+拒绝后本回合不再打扰。它不依赖提示词依从性，对子代理同样生效；授权通道与沙箱/权限模式解耦。
 
 ## 为什么需要它
 
@@ -90,12 +92,14 @@ Error: wait-guard 拒绝：本回合前台等待已用 25s，再加这次 40s �
 node test/smoke.mjs                 # 25 项离线用例，用假 ctx/假审批服务驱动门控
 ```
 
-安装（link 本地目录；改代码后 `remove_bundle` + `install_bundle` 即可热替换，无需重启）：
+安装（link 本地目录；改代码后 `remove_bundle` + `install_bundle` 即可热替换，**不保证生效，行为没变就重启**）：
 
 ```
-plugin_manager action=remove_bundle  target=dsh-wait-guard
+git clone https://github.com/SUZUNAMI/dsh-wait-guard.git C:\Users\Z\日常问题\dsh-wait-guard
 plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wait-guard
 ```
+
+更新：`git pull` 后同样 `remove_bundle` + `install_bundle`（或重启）。
 
 上线自测：让 agent 跑 `Start-Sleep -Seconds 100`——你会看到审批框；点允许则它真的睡 100 秒，
 点拒绝则模型立刻拿到 `Error: wait-guard 拒绝：…`。
