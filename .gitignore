@@ -1,0 +1,6 @@
+node_modules/
+.debug/
+.scan/
+*.log
+*.tmp
+*.bak-*

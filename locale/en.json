@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Foreground wait guard",
+    "description": "Denies tool calls that would block the foreground for more than one minute, and tells the model to run the work in the background and end its turn instead of polling with sleeps."
+  }
+}

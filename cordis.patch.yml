@@ -1,0 +1,15 @@
+# dsh-wait-guard bundle patch：插入前台等待门控（Host 插件）。
+# 阈值与 L1 配置钳制（profile cordis.patch.yml 里的 pwsh-sandbox / tool-jobs）保持一套口径。
+# debugFile 默认关；排查时填一个绝对路径即可把每次 pre-execute 的关键节点追加到文件。
+- insert:
+    - id: wait-guard
+      name: 'dsh-wait-guard'
+      config:
+        maxSleepSeconds: 60
+        turnBudgetSeconds: 60
+        maxForegroundTimeoutSeconds: 60
+        countJobWait: true
+        countWaitAgent: false
+        countRemoteExec: true
+        promptOnViolation: true
+        promptNotice: true
