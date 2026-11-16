@@ -1,6 +1,6 @@
 # dsh-wait-guard — 前台等待守卫
 
-> 仓库：<https://github.com/SUZUNAMI/dsh-wait-guard>（私有）
+> 仓库：<https://github.com/SUZUNAMI/dsh-wait-guard>
 
 一个 DSH Host 插件：在 `tools/pre-execute` 上做**前台等待门控**。违规的调用默认被拒绝；
 开启 `promptOnViolation` 时改为**由你手动授权**——批准后本回合豁免，

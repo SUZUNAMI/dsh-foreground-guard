@@ -6,6 +6,20 @@
   "type": "module",
   "main": "lib/index.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SUZUNAMI/dsh-wait-guard.git"
+  },
+  "homepage": "https://github.com/SUZUNAMI/dsh-wait-guard#readme",
+  "bugs": {
+    "url": "https://github.com/SUZUNAMI/dsh-wait-guard/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "guardrail"
+  ],
   "exports": {
     ".": "./lib/index.js",
     "./locale/*.json": "./locale/*.json",
