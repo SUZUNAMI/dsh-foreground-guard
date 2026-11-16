@@ -25,7 +25,8 @@ AGENTS.md 里的「前台等待禁止超过 1 分钟」管不住模型：规则�
 | 单次上限 | 命令里任一静态 sleep > `maxSleepSeconds`（60s） | 请求授权 |
 | 回合预算 | 本回合累计等待（sleep 之和 + `job_output` 等待）> `turnBudgetSeconds`（60s） | 请求授权 |
 | 前台超时 | shell 工具声明 `timeoutMs` > `maxForegroundTimeoutSeconds`（60s）且非后台 | 请求授权 |
-| 放行 | `run_in_background: true`、毫秒级 sleep、`wait_agent`（默认不计入）、无 agent 的程序化调用 | 直接放行 |
+| 小等待豁免 | 单次等待 < `ignoreBelowSeconds`（5s） | 放行且**不计入**回合总时长 |
+| 放行 | `run_in_background: true`、`wait_agent`（默认不计入）、无 agent 的程序化调用 | 直接放行 |
 
 **授权语义（一次一回合）**：首次违规问一次。
 - 审批策略允许（`ask`）→ 走宿主审批框；`allowed-once` 即放行。
@@ -54,6 +55,7 @@ Error: wait-guard 拒绝：本回合前台等待已用 25s，再加这次 40s �
 |---|---|---|
 | `maxSleepSeconds` | 60 | 单条命令内任一 sleep 的上限 |
 | `turnBudgetSeconds` | 60 | 每回合前台等待总预算 |
+| `ignoreBelowSeconds` | 5 | 单次等待小于该秒数时**不计入**回合总时长（0 关闭豁免）；用于放行一轮里高频的小等待 |
 | `maxForegroundTimeoutSeconds` | 60 | 前台命令可声明的 `timeoutMs` 上限 |
 | `promptOnViolation` | true | 违规时弹授权框；false 则直接拒绝 |
 | `countJobWait` | true | `job_output(wait:true)` 计入预算 |
@@ -115,6 +117,8 @@ plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wai
 - 门控是同步判断、异步只发生在授权那一步；它不记录自己的持久状态，重启即清零。
 - **改代码后 `remove_bundle` + `install_bundle` 不保证热替换**（实测有一次没生效，重启后才换上新模块）。
   换完先自测一条违规；行为没变就重启 DSH。
+- **小等待豁免是个口子**：`ignoreBelowSeconds` 内的等待不记账，所以「4s × N」这类轮询能绕过回合总预算。
+  想收紧就把它调到 2 或 0（0 = 关闭豁免）。它的初衷是放行 `Start-Sleep 1~4` 这种合理的高频小等待。
 
 ## 文件
 
@@ -127,11 +131,11 @@ plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wai
 
 ## 状态
 
-2026-11-14：0.2.0。
+2026-11-14：0.3.0。
 
 | 验证项 | 结果 |
 |---|---|
-| 28 项离线用例 | 全过 |
+| 37 项离线用例 | 全过 |
 | 会话审计 `approval/asked → approval/decided` | 两条 wait-guard 请求，你分别 4.3s / 2.1s 点了允许 |
 | 单次 100s sleep | 0.1.0 时硬拒；0.2.0 改为弹框（实测弹出并批准） |
 | 回合累计 25s+40s | 第二次被预算拒绝（0.1.0 实测） |
@@ -139,4 +143,5 @@ plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wai
 | 拒绝路径（你点拒绝） | 实测：文案带真实 `300s`，本回合后续直接拒绝 |
 | `danger-full-access` 下的拦截 | 实测：`300s` 超时、`100s` sleep 仍被拒——门控不经过沙箱/权限层 |
 | 策略 `never` 下的授权 | 实测：trace 显示 `policy=never` → `userQuestions=function` → 你选“允许” → `verdict=granted`；同回合第二次违规直接放行 |
+| 小等待豁免 | 实测：两次 `Start-Sleep -Seconds 4` 之后，`-Seconds 53` 仍放行——若那 8s 记账，53+8=61 会被拒 |
 | 65s 前台命令 | 60s 处转后台 job（L1 生效） |

@@ -250,6 +250,34 @@ await check('策略 ask 但审批通道缺失：回落到问答卡片', async ()
   assert.equal(h.requests[0].via, 'questions')
 })
 
+await check('小于阈值的等待不计入回合总时长（默认 5s）', async () => {
+  const h = boot({ promptOnViolation: false })
+  for (let i = 0; i < 10; i += 1) {
+    assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 1', description: 'x' }))))
+  }
+  // 10 次 1s 若计入就是 10s；这里仍能再放行 50s，说明它们没记账
+  assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 50', description: 'x' }))))
+  const text = reason(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 20', description: 'x' })))
+  assert.match(text, /本回合前台等待已用 50s，再加这次 20s/)
+})
+
+await check('ignoreBelowSeconds: 0 关闭豁免', async () => {
+  const h = boot({ promptOnViolation: false, ignoreBelowSeconds: 0, turnBudgetSeconds: 2 })
+  assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 1', description: 'x' }))))
+  assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 1', description: 'x' }))))
+  assert.match(reason(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 1', description: 'x' }))), /单回合预算 2s/)
+})
+
+await check('豁免不放宽单次上限', async () => {
+  const h = boot({ promptOnViolation: false, ignoreBelowSeconds: 100 })
+  const text = reason(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 70', description: 'x' })))
+  assert.match(text, /超过单次上限 60s/)
+})
+
+await check('ignoreBelowSeconds 非法值在加载时抛错', () => {
+  assert.throws(() => boot({ ignoreBelowSeconds: -1 }), /必须是非负数/)
+})
+
 await check('授权服务抛错 → 退回直接拒绝', async () => {
   const h = boot({}, { approval: () => { throw new Error('boom') } })
   const decision = await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' }))
