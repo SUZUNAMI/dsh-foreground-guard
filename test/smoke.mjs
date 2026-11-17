@@ -1,5 +1,5 @@
 /**
- * dsh-wait-guard 离线冒烟测试：用假 ctx / 假审批服务驱动 pre-execute 门控，不依赖宿主。
+ * dsh-foreground-guard 离线冒烟测试：用假 ctx / 假审批服务驱动 pre-execute 门控，不依赖宿主。
  * 运行：node test/smoke.mjs
  */
 import assert from 'node:assert/strict'
@@ -118,7 +118,7 @@ await check('回合预算：25s + 40s 的拒绝文案与要求一致', async () 
   const text = reason(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 40', description: 'x' })))
   assert.equal(
     text,
-    'wait-guard 拒绝：本回合前台等待已用 25s，再加这次 40s 会超过单回合预算 60s。'
+    'foreground-guard 拒绝：本回合前台等待已用 25s，再加这次 40s 会超过单回合预算 60s。'
     + '不要轮询，后台任务完成会自动唤醒你；需要等条件成立请用 sentinel_watch。',
   )
 })
@@ -145,7 +145,7 @@ await check('批准一次 → 本次放行，且本回合后续不再拦、不�
   assert.equal(h.requests.length, 1)
   assert.equal(h.requests[0].toolName, 'pwsh')
   assert.match(h.requests[0].displayReason.zh, /前台等待授权/)
-  assert.match(h.requests[0].reason, /wait-guard: pwsh/)
+  assert.match(h.requests[0].reason, /foreground-guard: pwsh/)
   assert.ok(!h.requests[0].reason.includes('NaN'), '授权原因不应出现 NaN')
   assert.ok(!h.requests[0].displayReason.zh.includes('NaN'), '授权文案不应出现 NaN')
   assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 300', description: 'x' }))))
@@ -203,7 +203,7 @@ await check('会话策略 ask：照常请求授权', async () => {
 })
 
 await check('策略 never：改走问答卡片，允许后本回合豁免', async () => {
-  const approve = { answers: [{ id: 'wait-guard', selected: ['允许本回合（后续不再询问）'] }] }
+  const approve = { answers: [{ id: 'foreground-guard', selected: ['允许本回合（后续不再询问）'] }] }
   const h = boot({}, { policy: 'never', session: { id: 's' }, questions: () => approve })
   assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' }))))
   assert.equal(h.requests.length, 1)
@@ -214,7 +214,7 @@ await check('策略 never：改走问答卡片，允许后本回合豁免', asyn
 })
 
 await check('策略 never：问答卡片拒绝后本回合直接拒绝', async () => {
-  const reject = { answers: [{ id: 'wait-guard', selected: ['拒绝'] }] }
+  const reject = { answers: [{ id: 'foreground-guard', selected: ['拒绝'] }] }
   const h = boot({}, { policy: 'never', session: { id: 's' }, questions: () => reject })
   const first = reason(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' })))
   assert.match(first, /用户已拒绝这次前台等待授权/)
@@ -243,7 +243,7 @@ await check('问答通道抛错（如子代理 DELEGATED_CALLER）：直接拒�
 })
 
 await check('策略 ask 但审批通道缺失：回落到问答卡片', async () => {
-  const approve = { answers: [{ id: 'wait-guard', selected: ['允许本回合（后续不再询问）'] }] }
+  const approve = { answers: [{ id: 'foreground-guard', selected: ['允许本回合（后续不再询问）'] }] }
   const h = boot({}, { policy: 'ask', session: { id: 's' }, questions: () => approve })
   assert.ok(allow(await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' }))))
   assert.equal(h.requests.length, 1)
@@ -359,7 +359,7 @@ await check('非法配置在加载时抛错', () => {
 await check('注入一段系统提示段落', () => {
   const h = boot()
   assert.equal(h.sections.length, 1)
-  assert.equal(h.sections[0].name, 'wait-guard')
+  assert.equal(h.sections[0].name, 'foreground-guard')
   assert.match(h.sections[0].text, /run_in_background=true/)
 })
 

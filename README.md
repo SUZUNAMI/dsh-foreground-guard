@@ -1,6 +1,6 @@
-# dsh-wait-guard — 前台等待守卫
+# dsh-foreground-guard — 前台等待守卫
 
-> 仓库：<https://github.com/SUZUNAMI/dsh-wait-guard>
+> 仓库：<https://github.com/SUZUNAMI/dsh-foreground-guard>
 
 一个 DSH Host 插件：在 `tools/pre-execute` 上做**前台等待门控**。违规的调用默认被拒绝；
 开启 `promptOnViolation` 时改为**由你手动授权**——批准后本回合豁免，
@@ -41,7 +41,7 @@ AGENTS.md 里的「前台等待禁止超过 1 分钟」管不住模型：规则�
 拒绝时的模型侧文案（预算示例，就是你确认过的那版）：
 
 ```text
-Error: wait-guard 拒绝：本回合前台等待已用 25s，再加这次 40s 会超过单回合预算 60s。
+Error: foreground-guard 拒绝：本回合前台等待已用 25s，再加这次 40s 会超过单回合预算 60s。
 不要轮询，后台任务完成会自动唤醒你；需要等条件成立请用 sentinel_watch。
 ```
 
@@ -97,14 +97,14 @@ node test/smoke.mjs                 # 25 项离线用例，用假 ctx/假审批�
 安装（link 本地目录；改代码后 `remove_bundle` + `install_bundle` 即可热替换，**不保证生效，行为没变就重启**）：
 
 ```
-git clone https://github.com/SUZUNAMI/dsh-wait-guard.git C:\Users\Z\日常问题\dsh-wait-guard
-plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wait-guard
+git clone https://github.com/SUZUNAMI/dsh-foreground-guard.git C:\Users\Z\日常问题\dsh-foreground-guard
+plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-foreground-guard
 ```
 
 更新：`git pull` 后同样 `remove_bundle` + `install_bundle`（或重启）。
 
 上线自测：让 agent 跑 `Start-Sleep -Seconds 100`——你会看到审批框；点允许则它真的睡 100 秒，
-点拒绝则模型立刻拿到 `Error: wait-guard 拒绝：…`。
+点拒绝则模型立刻拿到 `Error: foreground-guard 拒绝：…`。
 
 ## 已知边界
 
@@ -125,7 +125,7 @@ plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wai
 | 文件 | 作用 |
 |---|---|
 | `lib/index.js` | 插件本体：解析器 + 门控 + 授权请求 + 提示段落（零 DSH 依赖） |
-| `cordis.patch.yml` | bundle 补丁，插入 `wait-guard` 行与默认阈值 |
+| `cordis.patch.yml` | bundle 补丁，插入 `foreground-guard` 行与默认阈值 |
 | `test/smoke.mjs` | 25 项离线冒烟用例 |
 | `locale/{en,zh}.json`、`icon.svg` | 插件列表里的标题、描述与图标 |
 
@@ -136,7 +136,7 @@ plugin_manager action=install_bundle target=link:C:\Users\Z\日常问题\dsh-wai
 | 验证项 | 结果 |
 |---|---|
 | 37 项离线用例 | 全过 |
-| 会话审计 `approval/asked → approval/decided` | 两条 wait-guard 请求，你分别 4.3s / 2.1s 点了允许 |
+| 会话审计 `approval/asked → approval/decided` | 两条 foreground-guard 请求，你分别 4.3s / 2.1s 点了允许 |
 | 单次 100s sleep | 0.1.0 时硬拒；0.2.0 改为弹框（实测弹出并批准） |
 | 回合累计 25s+40s | 第二次被预算拒绝（0.1.0 实测） |
 | `timeoutMs: 300000` | 弹框；修复前文案出现 `NaNs`，0.2.0 已改为真实秒数并有离线用例锁定 |

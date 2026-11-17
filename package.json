@@ -1,5 +1,5 @@
 {
-  "name": "dsh-wait-guard",
+  "name": "dsh-foreground-guard",
   "version": "0.3.0",
   "private": true,
   "description": "Deny tool calls that would block the foreground longer than one minute, and steer the model to background jobs plus an ended turn.",
@@ -8,11 +8,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SUZUNAMI/dsh-wait-guard.git"
+    "url": "git+https://github.com/SUZUNAMI/dsh-foreground-guard.git"
   },
-  "homepage": "https://github.com/SUZUNAMI/dsh-wait-guard#readme",
+  "homepage": "https://github.com/SUZUNAMI/dsh-foreground-guard#readme",
   "bugs": {
-    "url": "https://github.com/SUZUNAMI/dsh-wait-guard/issues"
+    "url": "https://github.com/SUZUNAMI/dsh-foreground-guard/issues"
   },
   "keywords": [
     "dsh",
