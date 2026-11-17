@@ -1,6 +1,6 @@
 {
   "name": "dsh-foreground-guard",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Deny tool calls that would block the foreground longer than one minute, and steer the model to background jobs plus an ended turn.",
   "type": "module",

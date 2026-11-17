@@ -38,6 +38,7 @@ function makeCtx(options = {}) {
       }
     },
     systemPrompt: { section(section) { sections.push(section); return () => {} } },
+    tools: { schemas: options.schemas ?? (() => []) },
   }
   return { ctx, listeners, sections, requests }
 }
@@ -105,6 +106,18 @@ await check('100s 单次 sleep 被拒', async () => {
   const decision = await h.run(call('pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' }))
   assert.match(reason(decision), /超过单次上限 60s/)
   assert.equal(h.requests.length, 0, '没有审批通道时不应请求授权')
+})
+
+await check('dsh-ops 的 ops_bash 同样受门控', async () => {
+  const h = boot()
+  const decision = await h.run(call('ops_bash', { command: 'sleep 100', description: 'x' }))
+  assert.match(reason(decision), /超过单次上限 60s/)
+})
+
+await check('动态探测：注册表里的 ops_pwsh 即使不在静态列表也被纳入', async () => {
+  const h = boot({}, { schemas: () => [{ name: 'ops_pwsh' }] })
+  const decision = await h.run(call('ops_pwsh', { command: 'Start-Sleep -Seconds 100', description: 'x' }))
+  assert.match(reason(decision), /超过单次上限 60s/)
 })
 
 await check('40s 单次 sleep 放行', async () => {
