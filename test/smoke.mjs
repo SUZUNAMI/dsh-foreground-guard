@@ -132,7 +132,7 @@ await check('回合预算：25s + 40s 的拒绝文案与要求一致', async () 
   assert.equal(
     text,
     'foreground-guard 拒绝：本回合前台等待已用 25s，再加这次 40s 会超过单回合预算 60s。'
-    + '不要轮询，后台任务完成会自动唤醒你；需要等条件成立请用 sentinel_watch。',
+    + '长任务使用 run_in_background，不需要 sleep 或 job_output 轮询',
   )
 })
 
